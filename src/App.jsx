@@ -4,6 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
+  Radar, TrendingUp,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -33,6 +34,8 @@ import RiskAssessments from './pages/RiskAssessments';
 import SavingsSummaries from './pages/SavingsSummaries';
 import Opportunities from './pages/Opportunities';
 import Documents from './pages/Documents';
+import RiskScores from './pages/RiskScores';
+import Forecasts from './pages/Forecasts';
 
 function initials(email) {
   if (!email) return '?';
@@ -172,6 +175,13 @@ export default function App() {
       ],
     },
     {
+      label: 'Advanced Intelligence',
+      items: [
+        { key: 'risk-scores', label: 'Risk Scores', icon: Radar },
+        { key: 'forecasts', label: 'Forecasts', icon: TrendingUp },
+      ],
+    },
+    {
       label: 'Admin',
       items: [
         { key: 'users', label: 'Users', icon: UsersIcon },
@@ -188,7 +198,7 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1-5 &middot; Core, 340B, Payer, HIV &amp; Compliance</small>
+            <small>Phase 1-6 &middot; Core through Advanced Intelligence</small>
           </div>
         </div>
 
@@ -265,6 +275,8 @@ export default function App() {
           {view === 'savings-summaries' && org && <SavingsSummaries org={org} />}
           {view === 'opportunities' && org && <Opportunities org={org} />}
           {view === 'documents' && org && <Documents org={org} />}
+          {view === 'risk-scores' && org && <RiskScores org={org} />}
+          {view === 'forecasts' && org && <Forecasts org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
         </div>

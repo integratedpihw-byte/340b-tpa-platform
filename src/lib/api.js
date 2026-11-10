@@ -741,6 +741,64 @@ export async function deleteDocument(id) {
   if (error) throw error;
 }
 
+// ---------- risk scores ----------
+
+export async function fetchRiskScores(orgId) {
+  const { data, error } = await supabase
+    .from('risk_scores')
+    .select('*, covered_entities(name)')
+    .eq('org_id', orgId)
+    .order('score_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createRiskScore(fields) {
+  const { data, error } = await supabase.from('risk_scores').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRiskScore(id, patch) {
+  const { data, error } = await supabase.from('risk_scores').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRiskScore(id) {
+  const { error } = await supabase.from('risk_scores').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- forecasts ----------
+
+export async function fetchForecasts(orgId) {
+  const { data, error } = await supabase
+    .from('forecasts')
+    .select('*, covered_entities(name)')
+    .eq('org_id', orgId)
+    .order('period_start', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createForecast(fields) {
+  const { data, error } = await supabase.from('forecasts').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateForecast(id, patch) {
+  const { data, error } = await supabase.from('forecasts').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteForecast(id) {
+  const { error } = await supabase.from('forecasts').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
