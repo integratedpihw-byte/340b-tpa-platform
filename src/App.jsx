@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   LayoutDashboard, Building2, ShieldCheck, MapPinned, Users as UsersIcon, ScrollText, LogOut,
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
+  TestTube, ClipboardList, HeartPulse, UserCog,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -22,6 +23,10 @@ import MedicaidEnrollments from './pages/MedicaidEnrollments';
 import MedicareClaims from './pages/MedicareClaims';
 import PayerReconciliations from './pages/PayerReconciliations';
 import ClaimsExceptions from './pages/ClaimsExceptions';
+import TestingSites from './pages/TestingSites';
+import TestingEncounters from './pages/TestingEncounters';
+import LinkageToCare from './pages/LinkageToCare';
+import CounselorAssignments from './pages/CounselorAssignments';
 
 function initials(email) {
   if (!email) return '?';
@@ -142,6 +147,15 @@ export default function App() {
       ],
     },
     {
+      label: 'HIV Program',
+      items: [
+        { key: 'testing-sites', label: 'Testing Sites', icon: TestTube },
+        { key: 'testing-encounters', label: 'Testing Encounters', icon: ClipboardList },
+        { key: 'linkage', label: 'Linkage to Care', icon: HeartPulse },
+        { key: 'counselor-assignments', label: 'Counselor Assignments', icon: UserCog },
+      ],
+    },
+    {
       label: 'Admin',
       items: [
         { key: 'users', label: 'Users', icon: UsersIcon },
@@ -158,7 +172,7 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1-3 &middot; Core, 340B &amp; Payer</small>
+            <small>Phase 1-4 &middot; Core, 340B, Payer &amp; HIV Program</small>
           </div>
         </div>
 
@@ -217,10 +231,19 @@ export default function App() {
           )}
           {view === 'entities' && org && <CoveredEntities org={org} />}
           {view === 'facilities' && org && <Facilities org={org} />}
+          {view === 'prescriptions' && org && <Prescriptions org={org} />}
+          {view === 'dispensing' && org && <Dispensing org={org} />}
+          {view === 'inventory' && org && <Inventory org={org} />}
+          {view === 'purchasing' && org && <Purchasing org={org} />}
+          {view === 'contracts' && org && <PharmacyContracts org={org} />}
           {view === 'medicaid' && org && <MedicaidEnrollments org={org} />}
           {view === 'medicare' && org && <MedicareClaims org={org} />}
           {view === 'reconciliations' && org && <PayerReconciliations org={org} />}
           {view === 'exceptions' && org && <ClaimsExceptions org={org} />}
+          {view === 'testing-sites' && org && <TestingSites org={org} />}
+          {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
+          {view === 'linkage' && org && <LinkageToCare org={org} />}
+          {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
         </div>

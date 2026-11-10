@@ -460,6 +460,127 @@ export async function deleteClaimsException(id) {
   if (error) throw error;
 }
 
+// ---------- testing sites ----------
+
+export async function fetchTestingSites(orgId) {
+  const { data, error } = await supabase
+    .from('testing_sites')
+    .select('*, facilities(name)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createTestingSite(fields) {
+  const { data, error } = await supabase.from('testing_sites').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTestingSite(id, patch) {
+  const { data, error } = await supabase
+    .from('testing_sites')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTestingSite(id) {
+  const { error } = await supabase.from('testing_sites').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- testing encounters ----------
+
+export async function fetchTestingEncounters(orgId) {
+  const { data, error } = await supabase
+    .from('testing_encounters')
+    .select('*, testing_sites(facility_id, facilities(name)), users(email)')
+    .eq('org_id', orgId)
+    .order('encounter_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createTestingEncounter(fields) {
+  const { data, error } = await supabase.from('testing_encounters').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTestingEncounter(id, patch) {
+  const { data, error } = await supabase.from('testing_encounters').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTestingEncounter(id) {
+  const { error } = await supabase.from('testing_encounters').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- linkage to care events ----------
+
+export async function fetchLinkageEvents(orgId) {
+  const { data, error } = await supabase
+    .from('linkage_to_care_events')
+    .select('*, testing_encounters(client_ref, test_type), facilities(name)')
+    .eq('org_id', orgId)
+    .order('event_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createLinkageEvent(fields) {
+  const { data, error } = await supabase.from('linkage_to_care_events').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateLinkageEvent(id, patch) {
+  const { data, error } = await supabase.from('linkage_to_care_events').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteLinkageEvent(id) {
+  const { error } = await supabase.from('linkage_to_care_events').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- counselor assignments ----------
+
+export async function fetchCounselorAssignments(orgId) {
+  const { data, error } = await supabase
+    .from('counselor_assignments')
+    .select('*, users(email), testing_sites(facility_id, facilities(name))')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createCounselorAssignment(fields) {
+  const { data, error } = await supabase.from('counselor_assignments').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCounselorAssignment(id, patch) {
+  const { data, error } = await supabase.from('counselor_assignments').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCounselorAssignment(id) {
+  const { error } = await supabase.from('counselor_assignments').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
