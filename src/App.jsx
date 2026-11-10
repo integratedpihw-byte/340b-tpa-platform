@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   LayoutDashboard, Building2, ShieldCheck, MapPinned, Users as UsersIcon, ScrollText, LogOut,
+  FileText, PackageCheck, Boxes, ShoppingCart, Handshake,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -12,6 +13,11 @@ import CoveredEntities from './pages/CoveredEntities';
 import Facilities from './pages/Facilities';
 import UsersPage from './pages/UsersPage';
 import AuditLog from './pages/AuditLog';
+import Prescriptions from './pages/Prescriptions';
+import Dispensing from './pages/Dispensing';
+import Inventory from './pages/Inventory';
+import Purchasing from './pages/Purchasing';
+import PharmacyContracts from './pages/PharmacyContracts';
 
 function initials(email) {
   if (!email) return '?';
@@ -97,14 +103,40 @@ export default function App() {
 
   const org = organizations.find((o) => o.id === selectedOrgId) || organizations[0];
 
-  const navItems = [
-    { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    ...(isPlatformAdmin ? [{ key: 'organizations', label: 'Organizations', icon: Building2 }] : []),
-    { key: 'entities', label: 'Covered Entities', icon: ShieldCheck },
-    { key: 'facilities', label: 'Facilities', icon: MapPinned },
-    { key: 'users', label: 'Users', icon: UsersIcon },
-    { key: 'audit', label: 'Audit Log', icon: ScrollText },
+  const navGroups = [
+    {
+      label: 'Workspace',
+      items: [
+        { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        ...(isPlatformAdmin ? [{ key: 'organizations', label: 'Organizations', icon: Building2 }] : []),
+      ],
+    },
+    {
+      label: 'Covered Entity',
+      items: [
+        { key: 'entities', label: 'Covered Entities', icon: ShieldCheck },
+        { key: 'facilities', label: 'Facilities', icon: MapPinned },
+      ],
+    },
+    {
+      label: '340B Operations',
+      items: [
+        { key: 'prescriptions', label: 'Prescriptions', icon: FileText },
+        { key: 'dispensing', label: 'Dispensing', icon: PackageCheck },
+        { key: 'inventory', label: 'Inventory', icon: Boxes },
+        { key: 'purchasing', label: 'Purchasing', icon: ShoppingCart },
+        { key: 'contracts', label: 'Contract Pharmacies', icon: Handshake },
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        { key: 'users', label: 'Users', icon: UsersIcon },
+        { key: 'audit', label: 'Audit Log', icon: ScrollText },
+      ],
+    },
   ];
+  const navItems = navGroups.flatMap((g) => g.items);
 
   return (
     <div className="shell">
@@ -113,22 +145,24 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1 · Core Infrastructure</small>
+            <small>Phase 1-2 &middot; Core &amp; 340B Ops</small>
           </div>
         </div>
 
-        <div className="sidebar-section">
-          <div className="sidebar-section-label">Workspace</div>
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              className={`nav-item ${view === item.key ? 'active' : ''}`}
-              onClick={() => setView(item.key)}
-            >
-              <item.icon size={16} /> {item.label}
-            </button>
-          ))}
-        </div>
+        {navGroups.map((group) => (
+          <div className="sidebar-section" key={group.label}>
+            <div className="sidebar-section-label">{group.label}</div>
+            {group.items.map((item) => (
+              <button
+                key={item.key}
+                className={`nav-item ${view === item.key ? 'active' : ''}`}
+                onClick={() => setView(item.key)}
+              >
+                <item.icon size={16} /> {item.label}
+              </button>
+            ))}
+          </div>
+        ))}
 
         <div className="sidebar-footer">
           <div className="sidebar-user">

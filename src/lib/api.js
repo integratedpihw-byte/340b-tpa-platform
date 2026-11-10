@@ -194,6 +194,156 @@ export async function updateUser(id, patch) {
   return data;
 }
 
+// ---------- prescriptions ----------
+
+export async function fetchPrescriptions(orgId) {
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select('*, covered_entities(entity_type, opais_id), facilities(name)')
+    .eq('org_id', orgId)
+    .order('prescribed_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createPrescription(fields) {
+  const { data, error } = await supabase.from('prescriptions').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePrescription(id, patch) {
+  const { data, error } = await supabase.from('prescriptions').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePrescription(id) {
+  const { error } = await supabase.from('prescriptions').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- dispensing records ----------
+
+export async function fetchDispensingRecords(orgId) {
+  const { data, error } = await supabase
+    .from('dispensing_records')
+    .select('*, prescriptions(drug_name, patient_ref), facilities(name)')
+    .eq('org_id', orgId)
+    .order('dispensed_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createDispensingRecord(fields) {
+  const { data, error } = await supabase.from('dispensing_records').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateDispensingRecord(id, patch) {
+  const { data, error } = await supabase.from('dispensing_records').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteDispensingRecord(id) {
+  const { error } = await supabase.from('dispensing_records').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- inventory ----------
+
+export async function fetchInventoryItems(orgId) {
+  const { data, error } = await supabase
+    .from('inventory_items')
+    .select('*, covered_entities(entity_type, opais_id)')
+    .eq('org_id', orgId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createInventoryItem(fields) {
+  const { data, error } = await supabase.from('inventory_items').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateInventoryItem(id, patch) {
+  const { data, error } = await supabase
+    .from('inventory_items')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteInventoryItem(id) {
+  const { error } = await supabase.from('inventory_items').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- purchase orders ----------
+
+export async function fetchPurchaseOrders(orgId) {
+  const { data, error } = await supabase
+    .from('purchase_orders')
+    .select('*, covered_entities(entity_type, opais_id)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createPurchaseOrder(fields) {
+  const { data, error } = await supabase.from('purchase_orders').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePurchaseOrder(id, patch) {
+  const { data, error } = await supabase.from('purchase_orders').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePurchaseOrder(id) {
+  const { error } = await supabase.from('purchase_orders').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- pharmacy contracts ----------
+
+export async function fetchPharmacyContracts(orgId) {
+  const { data, error } = await supabase
+    .from('pharmacy_contracts')
+    .select('*, covered_entities(entity_type, opais_id), facilities(name)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createPharmacyContract(fields) {
+  const { data, error } = await supabase.from('pharmacy_contracts').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePharmacyContract(id, patch) {
+  const { data, error } = await supabase.from('pharmacy_contracts').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePharmacyContract(id) {
+  const { error } = await supabase.from('pharmacy_contracts').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
