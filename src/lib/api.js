@@ -44,7 +44,7 @@ export async function fetchMyProfile(userId) {
 export async function joinOrganization(userId, email, orgId) {
   const { data, error } = await supabase
     .from('users')
-    .insert({ id: userId, org_id: orgId, email, status: 'active' })
+    .insert({ id: userId, org_id: orgId, email, status: 'invited' })
     .select()
     .single();
   if (error) throw error;

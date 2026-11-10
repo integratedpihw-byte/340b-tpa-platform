@@ -10,6 +10,7 @@ import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
+import PendingAccess from './pages/PendingAccess';
 import Dashboard from './pages/Dashboard';
 import Organizations from './pages/Organizations';
 import CoveredEntities from './pages/CoveredEntities';
@@ -109,6 +110,10 @@ export default function App() {
 
   if (loadingWorkspace && organizations.length === 0) {
     return <div className="center-screen">Setting up your workspace…</div>;
+  }
+
+  if (organizations.length === 0 && !isPlatformAdmin && profile && profile.status !== 'active') {
+    return <PendingAccess status={profile.status} onRefresh={() => loadWorkspace(user)} />;
   }
 
   if (organizations.length === 0) {

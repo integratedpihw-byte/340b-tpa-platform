@@ -92,7 +92,7 @@ export default function Onboarding({ user, isPlatformAdmin, onDone }) {
             <div className="field">
               <label>Organization ID</label>
               <input required value={orgId} onChange={(e) => setOrgId(e.target.value)} placeholder="UUID shared by your org admin" />
-              <div className="field-hint">Find this on the Organizations page once an admin has created your org.</div>
+              <div className="field-hint">An admin of that organization will need to approve your request before you get access.</div>
             </div>
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {busy ? 'Joining…' : 'Join organization'}

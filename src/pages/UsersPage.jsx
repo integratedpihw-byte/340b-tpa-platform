@@ -63,7 +63,7 @@ export default function UsersPage({ org }) {
             <div className="empty-state">
               <UsersIcon size={28} />
               <p>No one has joined this organization yet.</p>
-              <p style={{ fontSize: 12.5 }}>Share the org ID above — a new teammate signs up, then joins with it.</p>
+              <p style={{ fontSize: 12.5 }}>Share the org ID above — a new teammate signs up and joins with it, then appears here as "invited" for you to approve.</p>
             </div>
           ) : (
             <table>
@@ -97,7 +97,7 @@ export default function UsersPage({ org }) {
                     <td>{u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : '—'}</td>
                     <td>
                       <button className="btn btn-secondary btn-sm" onClick={() => handleStatusToggle(u)}>
-                        {u.status === 'active' ? 'Disable' : 'Enable'}
+                        {u.status === 'active' ? 'Disable' : u.status === 'invited' ? 'Approve' : 'Re-enable'}
                       </button>
                     </td>
                   </tr>
