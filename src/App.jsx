@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   LayoutDashboard, Building2, ShieldCheck, MapPinned, Users as UsersIcon, ScrollText, LogOut,
-  FileText, PackageCheck, Boxes, ShoppingCart, Handshake,
+  FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -18,6 +18,10 @@ import Dispensing from './pages/Dispensing';
 import Inventory from './pages/Inventory';
 import Purchasing from './pages/Purchasing';
 import PharmacyContracts from './pages/PharmacyContracts';
+import MedicaidEnrollments from './pages/MedicaidEnrollments';
+import MedicareClaims from './pages/MedicareClaims';
+import PayerReconciliations from './pages/PayerReconciliations';
+import ClaimsExceptions from './pages/ClaimsExceptions';
 
 function initials(email) {
   if (!email) return '?';
@@ -129,6 +133,15 @@ export default function App() {
       ],
     },
     {
+      label: 'Payer Management',
+      items: [
+        { key: 'medicaid', label: 'Medicaid Enrollments', icon: Landmark },
+        { key: 'medicare', label: 'Medicare Claims', icon: Stethoscope },
+        { key: 'reconciliations', label: 'Payer Reconciliations', icon: GitCompare },
+        { key: 'exceptions', label: 'Claims Exceptions', icon: AlertOctagon },
+      ],
+    },
+    {
       label: 'Admin',
       items: [
         { key: 'users', label: 'Users', icon: UsersIcon },
@@ -145,7 +158,7 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1-2 &middot; Core &amp; 340B Ops</small>
+            <small>Phase 1-3 &middot; Core, 340B &amp; Payer</small>
           </div>
         </div>
 
@@ -204,6 +217,10 @@ export default function App() {
           )}
           {view === 'entities' && org && <CoveredEntities org={org} />}
           {view === 'facilities' && org && <Facilities org={org} />}
+          {view === 'medicaid' && org && <MedicaidEnrollments org={org} />}
+          {view === 'medicare' && org && <MedicareClaims org={org} />}
+          {view === 'reconciliations' && org && <PayerReconciliations org={org} />}
+          {view === 'exceptions' && org && <ClaimsExceptions org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
         </div>

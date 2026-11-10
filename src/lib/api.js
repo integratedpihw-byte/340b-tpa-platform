@@ -344,6 +344,122 @@ export async function deletePharmacyContract(id) {
   if (error) throw error;
 }
 
+// ---------- medicaid enrollments ----------
+
+export async function fetchMedicaidEnrollments(orgId) {
+  const { data, error } = await supabase
+    .from('medicaid_enrollments')
+    .select('*, covered_entities(entity_type, opais_id)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createMedicaidEnrollment(fields) {
+  const { data, error } = await supabase.from('medicaid_enrollments').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateMedicaidEnrollment(id, patch) {
+  const { data, error } = await supabase.from('medicaid_enrollments').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMedicaidEnrollment(id) {
+  const { error } = await supabase.from('medicaid_enrollments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- medicare claims ----------
+
+export async function fetchMedicareClaims(orgId) {
+  const { data, error } = await supabase
+    .from('medicare_claims')
+    .select('*, covered_entities(entity_type, opais_id)')
+    .eq('org_id', orgId)
+    .order('claim_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createMedicareClaim(fields) {
+  const { data, error } = await supabase.from('medicare_claims').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateMedicareClaim(id, patch) {
+  const { data, error } = await supabase.from('medicare_claims').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMedicareClaim(id) {
+  const { error } = await supabase.from('medicare_claims').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- payer reconciliations ----------
+
+export async function fetchPayerReconciliations(orgId) {
+  const { data, error } = await supabase
+    .from('payer_reconciliations')
+    .select('*, covered_entities(entity_type, opais_id)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createPayerReconciliation(fields) {
+  const { data, error } = await supabase.from('payer_reconciliations').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePayerReconciliation(id, patch) {
+  const { data, error } = await supabase.from('payer_reconciliations').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePayerReconciliation(id) {
+  const { error } = await supabase.from('payer_reconciliations').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- claims exceptions ----------
+
+export async function fetchClaimsExceptions(orgId) {
+  const { data, error } = await supabase
+    .from('claims_exceptions')
+    .select('*, payer_reconciliations(payer_type), medicare_claims(claim_number, drug_name)')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createClaimsException(fields) {
+  const { data, error } = await supabase.from('claims_exceptions').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateClaimsException(id, patch) {
+  const { data, error } = await supabase.from('claims_exceptions').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteClaimsException(id) {
+  const { error } = await supabase.from('claims_exceptions').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
