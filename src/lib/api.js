@@ -799,6 +799,69 @@ export async function deleteForecast(id) {
   if (error) throw error;
 }
 
+// ---------- integration connections ----------
+
+export async function fetchIntegrationConnections(orgId) {
+  const { data, error } = await supabase
+    .from('integration_connections')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createIntegrationConnection(fields) {
+  const { data, error } = await supabase.from('integration_connections').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateIntegrationConnection(id, patch) {
+  const { data, error } = await supabase
+    .from('integration_connections')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteIntegrationConnection(id) {
+  const { error } = await supabase.from('integration_connections').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- sync logs ----------
+
+export async function fetchSyncLogs(orgId) {
+  const { data, error } = await supabase
+    .from('sync_logs')
+    .select('*, integration_connections(name, connection_type)')
+    .eq('org_id', orgId)
+    .order('sync_started_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSyncLog(fields) {
+  const { data, error } = await supabase.from('sync_logs').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSyncLog(id, patch) {
+  const { data, error } = await supabase.from('sync_logs').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteSyncLog(id) {
+  const { error } = await supabase.from('sync_logs').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {

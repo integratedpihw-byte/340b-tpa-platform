@@ -4,7 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp,
+  Radar, TrendingUp, Plug, History,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -36,6 +36,8 @@ import Opportunities from './pages/Opportunities';
 import Documents from './pages/Documents';
 import RiskScores from './pages/RiskScores';
 import Forecasts from './pages/Forecasts';
+import IntegrationConnections from './pages/IntegrationConnections';
+import SyncLogs from './pages/SyncLogs';
 
 function initials(email) {
   if (!email) return '?';
@@ -182,6 +184,13 @@ export default function App() {
       ],
     },
     {
+      label: 'Enterprise Deployment',
+      items: [
+        { key: 'integration-connections', label: 'Integration Connections', icon: Plug },
+        { key: 'sync-logs', label: 'Sync Logs', icon: History },
+      ],
+    },
+    {
       label: 'Admin',
       items: [
         { key: 'users', label: 'Users', icon: UsersIcon },
@@ -198,7 +207,7 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1-6 &middot; Core through Advanced Intelligence</small>
+            <small>Phase 1-7 &middot; Complete Enterprise Platform</small>
           </div>
         </div>
 
@@ -277,6 +286,8 @@ export default function App() {
           {view === 'documents' && org && <Documents org={org} />}
           {view === 'risk-scores' && org && <RiskScores org={org} />}
           {view === 'forecasts' && org && <Forecasts org={org} />}
+          {view === 'integration-connections' && org && <IntegrationConnections org={org} />}
+          {view === 'sync-logs' && org && <SyncLogs org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
         </div>
