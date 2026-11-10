@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Building2, ShieldCheck, MapPinned, Users as UsersIcon, ScrollText, LogOut,
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
+  ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -27,6 +28,11 @@ import TestingSites from './pages/TestingSites';
 import TestingEncounters from './pages/TestingEncounters';
 import LinkageToCare from './pages/LinkageToCare';
 import CounselorAssignments from './pages/CounselorAssignments';
+import ComplianceFindings from './pages/ComplianceFindings';
+import RiskAssessments from './pages/RiskAssessments';
+import SavingsSummaries from './pages/SavingsSummaries';
+import Opportunities from './pages/Opportunities';
+import Documents from './pages/Documents';
 
 function initials(email) {
   if (!email) return '?';
@@ -156,6 +162,16 @@ export default function App() {
       ],
     },
     {
+      label: 'Compliance & Finance',
+      items: [
+        { key: 'compliance-findings', label: 'Compliance Findings', icon: ShieldAlert },
+        { key: 'risk-assessments', label: 'Risk Assessments', icon: Gauge },
+        { key: 'savings-summaries', label: 'Savings Summaries', icon: PiggyBank },
+        { key: 'opportunities', label: 'Opportunities', icon: Lightbulb },
+        { key: 'documents', label: 'Documents', icon: FileStack },
+      ],
+    },
+    {
       label: 'Admin',
       items: [
         { key: 'users', label: 'Users', icon: UsersIcon },
@@ -172,7 +188,7 @@ export default function App() {
           <div className="sidebar-brand-mark">TPA</div>
           <div className="sidebar-brand-text">
             340B TPA Platform
-            <small>Phase 1-4 &middot; Core, 340B, Payer &amp; HIV Program</small>
+            <small>Phase 1-5 &middot; Core, 340B, Payer, HIV &amp; Compliance</small>
           </div>
         </div>
 
@@ -244,6 +260,11 @@ export default function App() {
           {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
           {view === 'linkage' && org && <LinkageToCare org={org} />}
           {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
+          {view === 'compliance-findings' && org && <ComplianceFindings org={org} />}
+          {view === 'risk-assessments' && org && <RiskAssessments org={org} />}
+          {view === 'savings-summaries' && org && <SavingsSummaries org={org} />}
+          {view === 'opportunities' && org && <Opportunities org={org} />}
+          {view === 'documents' && org && <Documents org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
         </div>

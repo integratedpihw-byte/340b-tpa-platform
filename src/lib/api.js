@@ -581,6 +581,166 @@ export async function deleteCounselorAssignment(id) {
   if (error) throw error;
 }
 
+// ---------- compliance findings ----------
+
+export async function fetchComplianceFindings(orgId) {
+  const { data, error } = await supabase
+    .from('compliance_findings')
+    .select('*, covered_entities(name), facilities(name)')
+    .eq('org_id', orgId)
+    .order('discovered_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createComplianceFinding(fields) {
+  const { data, error } = await supabase.from('compliance_findings').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateComplianceFinding(id, patch) {
+  const { data, error } = await supabase
+    .from('compliance_findings')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteComplianceFinding(id) {
+  const { error } = await supabase.from('compliance_findings').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- risk assessments ----------
+
+export async function fetchRiskAssessments(orgId) {
+  const { data, error } = await supabase
+    .from('risk_assessments')
+    .select('*, covered_entities(name), users(email)')
+    .eq('org_id', orgId)
+    .order('assessment_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createRiskAssessment(fields) {
+  const { data, error } = await supabase.from('risk_assessments').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRiskAssessment(id, patch) {
+  const { data, error } = await supabase
+    .from('risk_assessments')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRiskAssessment(id) {
+  const { error } = await supabase.from('risk_assessments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- savings summaries ----------
+
+export async function fetchSavingsSummaries(orgId) {
+  const { data, error } = await supabase
+    .from('savings_summaries')
+    .select('*, covered_entities(name)')
+    .eq('org_id', orgId)
+    .order('period_start', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSavingsSummary(fields) {
+  const { data, error } = await supabase.from('savings_summaries').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSavingsSummary(id, patch) {
+  const { data, error } = await supabase.from('savings_summaries').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteSavingsSummary(id) {
+  const { error } = await supabase.from('savings_summaries').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- opportunities ----------
+
+export async function fetchOpportunities(orgId) {
+  const { data, error } = await supabase
+    .from('opportunities')
+    .select('*, covered_entities(name), users(email)')
+    .eq('org_id', orgId)
+    .order('identified_date', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createOpportunity(fields) {
+  const { data, error } = await supabase.from('opportunities').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateOpportunity(id, patch) {
+  const { data, error } = await supabase
+    .from('opportunities')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteOpportunity(id) {
+  const { error } = await supabase.from('opportunities').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---------- documents ----------
+
+export async function fetchDocuments(orgId) {
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*, covered_entities(name), facilities(name), users(email)')
+    .eq('org_id', orgId)
+    .order('uploaded_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createDocument(fields) {
+  const { data, error } = await supabase.from('documents').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateDocument(id, patch) {
+  const { data, error } = await supabase.from('documents').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteDocument(id) {
+  const { error } = await supabase.from('documents').delete().eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- audit log ----------
 
 export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
