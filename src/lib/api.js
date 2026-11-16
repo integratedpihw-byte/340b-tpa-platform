@@ -876,3 +876,105 @@ export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
   if (error) throw error;
   return data;
 }
+
+// ---------- data import and analysis engine ----------
+
+// Reads every row of a query, a page at a time (the API returns at most 1000 rows per request).
+async function fetchAllRows(makeQuery) {
+  const size = 1000;
+  const out = [];
+  for (let from = 0; ; from += size) {
+    const { data, error } = await makeQuery().range(from, from + size - 1);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < size) break;
+  }
+  return out;
+}
+
+// Rx number -> prescription id, used to link dispensing records and claims to prescriptions.
+export async function fetchPrescriptionIdsByRx(orgId) {
+  const rows = await fetchAllRows(() =>
+    supabase.from('prescriptions').select('id, rx_number').eq('org_id', orgId).not('rx_number', 'is', null).order('id'));
+  return new Map(rows.map((r) => [r.rx_number, r.id]));
+}
+
+// Keys already stored for a dataset, so the preview can say how many rows are new and how many update.
+export async function fetchExistingImportKeys(datasetKey, orgId) {
+  const spec = {
+    prescriptions: { table: 'prescriptions', cols: 'rx_number', key: (r) => r.rx_number },
+    dispensing: { table: 'dispensing_records', cols: 'external_ref', key: (r) => r.external_ref },
+    purchases: { table: 'purchase_orders', cols: 'invoice_number, ndc', key: (r) => (r.invoice_number ? `${r.invoice_number}|${r.ndc}` : null) },
+    medicare: { table: 'medicare_claims', cols: 'claim_number', key: (r) => r.claim_number },
+  }[datasetKey];
+  const rows = await fetchAllRows(() => supabase.from(spec.table).select(`id, ${spec.cols}`).eq('org_id', orgId).order('id'));
+  return new Set(rows.map(spec.key).filter((k) => k !== null && k !== undefined));
+}
+
+// Saves rows in batches. A batch is all-or-nothing; batches before a failure stay saved,
+// and the thrown error says how many rows were saved so the file can be corrected and re-imported.
+export async function importRecords(dataset, records, onProgress) {
+  const size = 200;
+  let done = 0;
+  for (let i = 0; i < records.length; i += size) {
+    const chunk = records.slice(i, i + size);
+    const { error } = await supabase.from(dataset.table).upsert(chunk, { onConflict: dataset.conflict });
+    if (error) {
+      const err = new Error(error.message);
+      err.code = error.code;
+      err.saved = done;
+      err.failedFrom = i + 1;
+      err.failedTo = i + chunk.length;
+      throw err;
+    }
+    done += chunk.length;
+    if (onProgress) onProgress(done, records.length);
+  }
+  return done;
+}
+
+export async function runEngine(orgId, scope = 'all') {
+  const { data, error } = await supabase.rpc('run_engine', { p_org: orgId, p_scope: scope });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchEngineRuns(orgId, limit = 10) {
+  const { data, error } = await supabase
+    .from('engine_runs')
+    .select('id, run_type, started_at, finished_at, summary')
+    .eq('org_id', orgId)
+    .order('started_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data;
+}
+
+async function countRows(table, orgId, filters = {}) {
+  let q = supabase.from(table).select('id', { count: 'exact', head: true }).eq('org_id', orgId);
+  for (const [k, v] of Object.entries(filters)) q = q.eq(k, v);
+  const { count, error } = await q;
+  if (error) throw error;
+  return count || 0;
+}
+
+// What the engine has to work with, and where the open engine findings stand.
+export async function fetchEngineOverview(orgId) {
+  const [prescriptions, dispensing, purchases, claims, contracts, critical, high, medium, low, opps, exceptions] = await Promise.all([
+    countRows('prescriptions', orgId),
+    countRows('dispensing_records', orgId),
+    countRows('purchase_orders', orgId),
+    countRows('medicare_claims', orgId),
+    countRows('pharmacy_contracts', orgId),
+    countRows('compliance_findings', orgId, { source: 'engine', status: 'open', severity: 'critical' }),
+    countRows('compliance_findings', orgId, { source: 'engine', status: 'open', severity: 'high' }),
+    countRows('compliance_findings', orgId, { source: 'engine', status: 'open', severity: 'medium' }),
+    countRows('compliance_findings', orgId, { source: 'engine', status: 'open', severity: 'low' }),
+    countRows('opportunities', orgId, { source: 'engine', status: 'identified' }),
+    countRows('claims_exceptions', orgId, { source: 'engine', status: 'open' }),
+  ]);
+  return {
+    data: { prescriptions, dispensing, purchases, claims, contracts },
+    open: { critical, high, medium, low, opportunities: opps, exceptions },
+  };
+}

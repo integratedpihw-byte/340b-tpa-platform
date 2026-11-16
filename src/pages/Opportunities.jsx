@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Lightbulb, X, Trash2 } from 'lucide-react';
+import AutoBadge, { ENGINE_DELETE_WARNING } from '../lib/AutoBadge';
 import { fetchOpportunities, fetchCoveredEntities, fetchOrgUsers, createOpportunity, updateOpportunity, deleteOpportunity } from '../lib/api';
 
 const OPPORTUNITY_TYPES = ['contract_pharmacy_expansion', 'formulary_optimization', 'split_billing_improvement', '340b_eligibility_recapture', 'other'];
@@ -90,7 +91,7 @@ export default function Opportunities({ org }) {
   }
 
   async function handleDelete(row) {
-    if (!confirm('Delete this opportunity?')) return;
+    if (!confirm(row.source === 'engine' ? ENGINE_DELETE_WARNING : 'Delete this opportunity?')) return;
     await deleteOpportunity(row.id);
     await load();
   }
@@ -129,7 +130,10 @@ export default function Opportunities({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{row.opportunity_type.replace(/_/g, ' ')}</td>
+                    <td>
+                      <span style={{ fontWeight: 600 }}>{row.opportunity_type.replace(/_/g, ' ')}</span><AutoBadge row={row} />
+                      {row.description && <div className="toolbar-sub" style={{ marginTop: 2, maxWidth: 520 }}>{row.description}</div>}
+                    </td>
                     <td>{row.covered_entities?.name || '—'}</td>
                     <td>{money(row.estimated_annual_value)}</td>
                     <td><StatusBadge status={row.status} /></td>

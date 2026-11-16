@@ -4,7 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp, Plug, History, Lock,
+  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -12,6 +12,8 @@ import { useIdleLogout } from './lib/useIdleLogout';
 import { IDLE_MINUTES, IDLE_WARN_SECONDS } from './lib/securityConfig';
 import MfaChallenge from './pages/MfaChallenge';
 import SecuritySettings from './pages/SecuritySettings';
+import DataImport from './pages/DataImport';
+import ReconciliationRisk from './pages/ReconciliationRisk';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
 import PendingAccess from './pages/PendingAccess';
@@ -212,6 +214,13 @@ export default function App() {
       ],
     },
     {
+      label: 'Data & Analysis',
+      items: [
+        { key: 'import', label: 'Data Import', icon: Upload },
+        { key: 'reconcile', label: 'Reconciliation & Risk', icon: ScanSearch },
+      ],
+    },
+    {
       label: 'Compliance & Finance',
       items: [
         { key: 'compliance-findings', label: 'Compliance Findings', icon: ShieldAlert },
@@ -330,6 +339,8 @@ export default function App() {
           {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
           {view === 'linkage' && org && <LinkageToCare org={org} />}
           {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
+          {view === 'import' && org && <DataImport org={org} onNavigate={setView} />}
+          {view === 'reconcile' && org && <ReconciliationRisk org={org} onNavigate={setView} />}
           {view === 'compliance-findings' && org && <ComplianceFindings org={org} />}
           {view === 'risk-assessments' && org && <RiskAssessments org={org} />}
           {view === 'savings-summaries' && org && <SavingsSummaries org={org} />}

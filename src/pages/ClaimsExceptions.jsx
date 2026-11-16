@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, AlertOctagon, X, Trash2 } from 'lucide-react';
+import AutoBadge, { ENGINE_DELETE_WARNING } from '../lib/AutoBadge';
 import { fetchClaimsExceptions, fetchPayerReconciliations, fetchMedicareClaims, createClaimsException, updateClaimsException, deleteClaimsException } from '../lib/api';
 
 const emptyForm = { reconciliation_id: '', medicare_claim_id: '', exception_type: 'other', description: '', status: 'open' };
@@ -85,7 +86,7 @@ export default function ClaimsExceptions({ org }) {
   }
 
   async function handleDelete(row) {
-    if (!confirm('Delete this exception?')) return;
+    if (!confirm(row.source === 'engine' ? ENGINE_DELETE_WARNING : 'Delete this exception?')) return;
     await deleteClaimsException(row.id);
     await load();
   }
@@ -123,7 +124,7 @@ export default function ClaimsExceptions({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{TYPE_LABELS[row.exception_type]}</td>
+                    <td style={{ fontWeight: 600 }}>{TYPE_LABELS[row.exception_type]}<AutoBadge row={row} /></td>
                     <td>{row.description || '—'}</td>
                     <td>
                       {row.medicare_claims ? `Claim: ${row.medicare_claims.claim_number || row.medicare_claims.drug_name}` : ''}

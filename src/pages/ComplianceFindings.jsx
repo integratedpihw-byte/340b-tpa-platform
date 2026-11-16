@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, ShieldAlert, X, Trash2 } from 'lucide-react';
+import AutoBadge, { ENGINE_DELETE_WARNING } from '../lib/AutoBadge';
 import { fetchComplianceFindings, fetchCoveredEntities, fetchFacilities, createComplianceFinding, updateComplianceFinding, deleteComplianceFinding } from '../lib/api';
 
 const FINDING_TYPES = ['duplicate_discount', 'diversion', 'ineligible_patient', 'inventory_discrepancy', 'contract_pharmacy_violation', 'other'];
@@ -91,7 +92,7 @@ export default function ComplianceFindings({ org }) {
   }
 
   async function handleDelete(row) {
-    if (!confirm('Delete this compliance finding?')) return;
+    if (!confirm(row.source === 'engine' ? ENGINE_DELETE_WARNING : 'Delete this compliance finding?')) return;
     await deleteComplianceFinding(row.id);
     await load();
   }
@@ -130,7 +131,10 @@ export default function ComplianceFindings({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{row.finding_type.replace(/_/g, ' ')}</td>
+                    <td>
+                      <span style={{ fontWeight: 600 }}>{row.finding_type.replace(/_/g, ' ')}</span><AutoBadge row={row} />
+                      {row.description && <div className="toolbar-sub" style={{ marginTop: 2, maxWidth: 520 }}>{row.description}</div>}
+                    </td>
                     <td>{row.covered_entities?.name || '—'}</td>
                     <td><SeverityBadge severity={row.severity} /></td>
                     <td><StatusBadge status={row.status} /></td>
