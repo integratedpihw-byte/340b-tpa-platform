@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import FilterBar from '../lib/FilterBar';
+import { applyFilter } from '../lib/filters';
 import { Plus, PackageCheck, X, Trash2 } from 'lucide-react';
 import { fetchDispensingRecords, fetchPrescriptions, fetchFacilities, createDispensingRecord, updateDispensingRecord, deleteDispensingRecord } from '../lib/api';
 
@@ -12,7 +14,8 @@ function ReconBadge({ status }) {
   return <span className={`badge ${cls}`}>{status}</span>;
 }
 
-export default function Dispensing({ org }) {
+export default function Dispensing({ org, initialFilter }) {
+  const [filter, setFilter] = useState(initialFilter || null);
   const [rows, setRows] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -92,6 +95,8 @@ export default function Dispensing({ org }) {
     return rx ? `${rx.drug_name}${rx.patient_ref ? ' · ' + rx.patient_ref : ''}` : '—';
   }
 
+  const shown = applyFilter(rows, filter);
+
   return (
     <div>
       <div className="toolbar">
@@ -104,9 +109,11 @@ export default function Dispensing({ org }) {
         </button>
       </div>
 
+      <FilterBar filter={filter} onClear={() => setFilter(null)} shown={shown.length} total={rows.length} />
+
       <div className="panel">
         <div className="panel-body" style={{ padding: 0 }}>
-          {!loading && rows.length === 0 ? (
+          {!loading && shown.length === 0 ? (
             <div className="empty-state">
               <PackageCheck size={28} />
               <p>No dispensing records yet.</p>
@@ -124,7 +131,7 @@ export default function Dispensing({ org }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {shown.map((row) => (
                   <tr key={row.id}>
                     <td style={{ fontWeight: 600 }}>{row.prescriptions?.drug_name || rxLabel(row.prescription_id)}</td>
                     <td>{row.quantity_dispensed ?? '—'}</td>

@@ -1,27 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, ScrollText } from 'lucide-react';
-import { fetchCoveredEntities, fetchFacilities, fetchOrgUsers, fetchAuditLog } from '../lib/api';
+import { fetchDashboardKpis, fetchAuditLog, DASHBOARD_FILTERS as F } from '../lib/api';
 
-export default function Dashboard({ org }) {
-  const [counts, setCounts] = useState(null);
+function Tile({ label, value, sub, tone, onClick, loading }) {
+  const color = tone === 'bad' && value > 0 ? '#b91c1c' : tone === 'warn' && value > 0 ? '#b45309' : undefined;
+  return (
+    <button type="button" className="stat-card" onClick={onClick} disabled={!onClick}
+      style={{ textAlign: 'left', cursor: onClick ? 'pointer' : 'default', font: 'inherit' }}
+      title={onClick ? 'Open the matching list' : undefined}>
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={{ color }}>{loading ? '–' : value.toLocaleString()}</div>
+      {sub && <div className="toolbar-sub">{loading ? ' ' : sub}</div>}
+    </button>
+  );
+}
+
+const money = (n) => `$${Math.round(n).toLocaleString()}`;
+
+export default function Dashboard({ org, onNavigate }) {
+  const [kpi, setKpi] = useState(null);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!org) return;
     let cancelled = false;
     setLoading(true);
-    Promise.all([
-      fetchCoveredEntities(org.id),
-      fetchFacilities(org.id),
-      fetchOrgUsers(org.id),
-      fetchAuditLog(org.id, { limit: 8 }),
-    ])
-      .then(([entities, facilities, users, log]) => {
-        if (cancelled) return;
-        setCounts({ entities: entities.length, facilities: facilities.length, users: users.length });
-        setRecent(log);
-      })
+    setError('');
+    Promise.all([fetchDashboardKpis(org.id), fetchAuditLog(org.id, { limit: 8 })])
+      .then(([k, log]) => { if (!cancelled) { setKpi(k); setRecent(log); } })
+      .catch((err) => { if (!cancelled) setError(err.message); })
       .finally(() => !cancelled && setLoading(false));
     return () => { cancelled = true; };
   }, [org]);
@@ -35,6 +44,9 @@ export default function Dashboard({ org }) {
     );
   }
 
+  const go = (view, filter) => () => onNavigate && onNavigate(view, filter || null);
+  const k = kpi || {};
+
   return (
     <div>
       <div className="toolbar">
@@ -42,24 +54,35 @@ export default function Dashboard({ org }) {
           <h2>{org.name}</h2>
           <div className="toolbar-sub">{org.legal_name || 'No legal name on file'} · {org.status}</div>
         </div>
+        <button className="btn btn-secondary" style={{ width: 'auto' }} onClick={go('reports')}>Reports</button>
       </div>
 
+      {error && <div className="alert alert-error">Could not load the dashboard numbers: {error}</div>}
+
+      <h3 style={{ margin: '4px 0 8px' }}>Needs attention</h3>
       <div className="stat-grid">
-        <div className="stat-card">
-          <div className="stat-label">Covered entities</div>
-          <div className="stat-value">{loading ? '–' : counts.entities}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Facilities</div>
-          <div className="stat-value">{loading ? '–' : counts.facilities}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Users</div>
-          <div className="stat-value">{loading ? '–' : counts.users}</div>
-        </div>
+        <Tile loading={loading} tone="bad" label="Critical and high findings" value={k.criticalHigh || 0} sub="open" onClick={go('compliance-findings', F.criticalHigh)} />
+        <Tile loading={loading} tone="warn" label="Open compliance findings" value={k.openFindings || 0} sub="all severities" onClick={go('compliance-findings', F.openFindings)} />
+        <Tile loading={loading} tone="warn" label="Open claim exceptions" value={k.openExceptions || 0} onClick={go('exceptions', F.openExceptions)} />
+        <Tile loading={loading} tone="warn" label="Dispensing records with an exception" value={k.dispensingExceptions || 0} onClick={go('dispensing', F.dispensingExceptions)} />
+        <Tile loading={loading} label="Dispensing not yet reconciled" value={k.unreconciled || 0} sub="run the analysis to reconcile" onClick={go('dispensing', F.unreconciled)} />
+        <Tile loading={loading} label="Prescriptions awaiting eligibility review" value={k.pendingReview || 0} onClick={go('prescriptions', F.pendingReview)} />
+        <Tile loading={loading} label="Part B claims without the TB modifier" value={k.noTbModifier || 0} sub="all dates; the analysis checks 2025 on" onClick={go('medicare', F.noTbModifier)} />
       </div>
 
-      <div className="panel">
+      <h3 style={{ margin: '20px 0 8px' }}>Opportunities</h3>
+      <div className="stat-grid">
+        <Tile loading={loading} label="Active opportunities" value={k.activeOpps || 0} sub={`${money(k.oppValue || 0)} estimated per year`} onClick={go('opportunities', F.activeOpportunities)} />
+      </div>
+
+      <h3 style={{ margin: '20px 0 8px' }}>Organization</h3>
+      <div className="stat-grid">
+        <Tile loading={loading} label="Covered entities" value={k.entities || 0} onClick={go('entities')} />
+        <Tile loading={loading} label="Facilities" value={k.facilities || 0} onClick={go('facilities')} />
+        <Tile loading={loading} label="Users" value={k.users || 0} onClick={go('users')} />
+      </div>
+
+      <div className="panel" style={{ marginTop: 20 }}>
         <div className="panel-header">
           <h2>Recent audit activity</h2>
         </div>

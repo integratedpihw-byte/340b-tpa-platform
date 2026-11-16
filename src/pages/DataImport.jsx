@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { entityLabel } from '../lib/labels';
 import { Upload, Download, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import { fetchCoveredEntities, fetchFacilities, fetchPrescriptionIdsByRx, fetchExistingImportKeys, importRecords } from '../lib/api';
 import { DATASETS, MAX_BYTES, MAX_ROWS, buildTemplate, parseCsv, validateRows } from '../lib/importer';
@@ -163,7 +164,7 @@ export default function DataImport({ org, onNavigate }) {
                 <label>Covered entity these rows belong to</label>
                 <select value={entityId} onChange={(e) => setEntityId(e.target.value)}>
                   {noEntities && <option value="">No covered entities yet</option>}
-                  {entities.map((en) => <option key={en.id} value={en.id}>{en.name}</option>)}
+                  {entities.map((en) => <option key={en.id} value={en.id}>{entityLabel(en)}</option>)}
                 </select>
               </div>
             )}

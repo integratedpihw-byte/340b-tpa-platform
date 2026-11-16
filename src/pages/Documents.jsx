@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { entityLabel } from '../lib/labels';
 import { Plus, FileStack, X, Trash2 } from 'lucide-react';
 import { fetchDocuments, fetchCoveredEntities, fetchFacilities, createDocument, updateDocument, deleteDocument } from '../lib/api';
 
@@ -121,7 +122,7 @@ export default function Documents({ org }) {
                       {row.file_url ? <a href={row.file_url} target="_blank" rel="noreferrer">{row.title}</a> : row.title}
                     </td>
                     <td>{row.document_type.replace(/_/g, ' ')}</td>
-                    <td>{row.covered_entities?.name || row.facilities?.name || '—'}</td>
+                    <td>{(row.covered_entities && entityLabel(row.covered_entities)) || row.facilities?.name || '—'}</td>
                     <td>{row.uploaded_at ? row.uploaded_at.slice(0, 10) : '—'}</td>
                     <td>{row.expires_at || '—'}</td>
                     <td className="row-actions">
@@ -160,7 +161,7 @@ export default function Documents({ org }) {
                   <label>Covered entity (optional)</label>
                   <select value={form.covered_entity_id} onChange={(e) => setForm({ ...form, covered_entity_id: e.target.value })}>
                     <option value="">—</option>
-                    {entities.map((en) => <option key={en.id} value={en.id}>{en.name}</option>)}
+                    {entities.map((en) => <option key={en.id} value={en.id}>{entityLabel(en)}</option>)}
                   </select>
                 </div>
                 <div className="field">

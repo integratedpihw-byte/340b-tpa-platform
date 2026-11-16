@@ -261,3 +261,4 @@ tbody tr:hover { background: #f8fafc; }
 .center-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); font-size: 14px; }
 
 code.mono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; background: #f1f5f9; padding: 2px 6px; border-radius: 5px; }
+.stat-card:not(:disabled):hover { border-color: var(--ink-soft); }

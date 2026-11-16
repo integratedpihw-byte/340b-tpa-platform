@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import FilterBar from '../lib/FilterBar';
+import { applyFilter } from '../lib/filters';
 import { Plus, AlertOctagon, X, Trash2 } from 'lucide-react';
 import AutoBadge, { ENGINE_DELETE_WARNING } from '../lib/AutoBadge';
 import { fetchClaimsExceptions, fetchPayerReconciliations, fetchMedicareClaims, createClaimsException, updateClaimsException, deleteClaimsException } from '../lib/api';
@@ -18,7 +20,8 @@ function StatusBadge({ status }) {
   return <span className={`badge ${cls}`}>{status}</span>;
 }
 
-export default function ClaimsExceptions({ org }) {
+export default function ClaimsExceptions({ org, initialFilter }) {
+  const [filter, setFilter] = useState(initialFilter || null);
   const [rows, setRows] = useState([]);
   const [reconciliations, setReconciliations] = useState([]);
   const [claims, setClaims] = useState([]);
@@ -91,6 +94,8 @@ export default function ClaimsExceptions({ org }) {
     await load();
   }
 
+  const shown = applyFilter(rows, filter);
+
   return (
     <div>
       <div className="toolbar">
@@ -103,9 +108,11 @@ export default function ClaimsExceptions({ org }) {
         </button>
       </div>
 
+      <FilterBar filter={filter} onClear={() => setFilter(null)} shown={shown.length} total={rows.length} />
+
       <div className="panel">
         <div className="panel-body" style={{ padding: 0 }}>
-          {!loading && rows.length === 0 ? (
+          {!loading && shown.length === 0 ? (
             <div className="empty-state">
               <AlertOctagon size={28} />
               <p>No exceptions logged.</p>
@@ -122,7 +129,7 @@ export default function ClaimsExceptions({ org }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {shown.map((row) => (
                   <tr key={row.id}>
                     <td style={{ fontWeight: 600 }}>{TYPE_LABELS[row.exception_type]}<AutoBadge row={row} /></td>
                     <td>{row.description || '—'}</td>

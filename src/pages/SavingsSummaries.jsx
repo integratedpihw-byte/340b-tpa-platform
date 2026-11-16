@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { entityLabel } from '../lib/labels';
 import { Plus, PiggyBank, X, Trash2 } from 'lucide-react';
 import { fetchSavingsSummaries, fetchCoveredEntities, createSavingsSummary, updateSavingsSummary, deleteSavingsSummary } from '../lib/api';
 
@@ -126,7 +127,7 @@ export default function SavingsSummaries({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{row.covered_entities?.name || '—'}</td>
+                    <td style={{ fontWeight: 600 }}>{entityLabel(row.covered_entities)}</td>
                     <td>{row.period_start} – {row.period_end}</td>
                     <td>{money(row.gross_savings)}</td>
                     <td>{money(row.net_savings)}</td>
@@ -157,7 +158,7 @@ export default function SavingsSummaries({ org }) {
                   <label>Covered entity</label>
                   <select value={form.covered_entity_id} onChange={(e) => setForm({ ...form, covered_entity_id: e.target.value })}>
                     <option value="">Select one…</option>
-                    {entities.map((en) => <option key={en.id} value={en.id}>{en.name}</option>)}
+                    {entities.map((en) => <option key={en.id} value={en.id}>{entityLabel(en)}</option>)}
                   </select>
                 </div>
                 <div className="inline-form">

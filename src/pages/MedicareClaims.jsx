@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import FilterBar from '../lib/FilterBar';
+import { applyFilter } from '../lib/filters';
 import { Plus, Stethoscope, X, Trash2, AlertTriangle } from 'lucide-react';
 import { fetchMedicareClaims, fetchCoveredEntities, fetchFacilities, createMedicareClaim, updateMedicareClaim, deleteMedicareClaim } from '../lib/api';
 
@@ -12,7 +14,8 @@ function StatusBadge({ status }) {
   return <span className={`badge ${cls}`}>{status}</span>;
 }
 
-export default function MedicareClaims({ org }) {
+export default function MedicareClaims({ org, initialFilter }) {
+  const [filter, setFilter] = useState(initialFilter || null);
   const [rows, setRows] = useState([]);
   const [entities, setEntities] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -98,6 +101,8 @@ export default function MedicareClaims({ org }) {
     return e ? (e.opais_id || e.entity_type.replace('_', ' ')) : '—';
   }
 
+  const shown = applyFilter(rows, filter);
+
   return (
     <div>
       <div className="toolbar">
@@ -110,9 +115,11 @@ export default function MedicareClaims({ org }) {
         </button>
       </div>
 
+      <FilterBar filter={filter} onClear={() => setFilter(null)} shown={shown.length} total={rows.length} />
+
       <div className="panel">
         <div className="panel-body" style={{ padding: 0 }}>
-          {!loading && rows.length === 0 ? (
+          {!loading && shown.length === 0 ? (
             <div className="empty-state">
               <Stethoscope size={28} />
               <p>No Medicare claims yet.</p>
@@ -131,7 +138,7 @@ export default function MedicareClaims({ org }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
+                {shown.map((row) => {
                   const flagMissing = row.part === 'B' && !row.tb_modifier_applied;
                   return (
                     <tr key={row.id}>

@@ -126,7 +126,7 @@ export async function deleteCoveredEntity(id) {
 export async function fetchFacilities(orgId) {
   const { data, error } = await supabase
     .from('facilities')
-    .select('*, covered_entities(name:id)')
+    .select('*, covered_entities(name, entity_type, opais_id)')
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -586,7 +586,7 @@ export async function deleteCounselorAssignment(id) {
 export async function fetchComplianceFindings(orgId) {
   const { data, error } = await supabase
     .from('compliance_findings')
-    .select('*, covered_entities(name), facilities(name)')
+    .select('*, covered_entities(name, entity_type, opais_id), facilities(name)')
     .eq('org_id', orgId)
     .order('discovered_date', { ascending: false });
   if (error) throw error;
@@ -620,7 +620,7 @@ export async function deleteComplianceFinding(id) {
 export async function fetchRiskAssessments(orgId) {
   const { data, error } = await supabase
     .from('risk_assessments')
-    .select('*, covered_entities(name), users(email)')
+    .select('*, covered_entities(name, entity_type, opais_id), users(email)')
     .eq('org_id', orgId)
     .order('assessment_date', { ascending: false });
   if (error) throw error;
@@ -654,7 +654,7 @@ export async function deleteRiskAssessment(id) {
 export async function fetchSavingsSummaries(orgId) {
   const { data, error } = await supabase
     .from('savings_summaries')
-    .select('*, covered_entities(name)')
+    .select('*, covered_entities(name, entity_type, opais_id)')
     .eq('org_id', orgId)
     .order('period_start', { ascending: false });
   if (error) throw error;
@@ -683,7 +683,7 @@ export async function deleteSavingsSummary(id) {
 export async function fetchOpportunities(orgId) {
   const { data, error } = await supabase
     .from('opportunities')
-    .select('*, covered_entities(name), users(email)')
+    .select('*, covered_entities(name, entity_type, opais_id), users(email)')
     .eq('org_id', orgId)
     .order('identified_date', { ascending: false });
   if (error) throw error;
@@ -717,7 +717,7 @@ export async function deleteOpportunity(id) {
 export async function fetchDocuments(orgId) {
   const { data, error } = await supabase
     .from('documents')
-    .select('*, covered_entities(name), facilities(name), users(email)')
+    .select('*, covered_entities(name, entity_type, opais_id), facilities(name), users(email)')
     .eq('org_id', orgId)
     .order('uploaded_at', { ascending: false });
   if (error) throw error;
@@ -746,7 +746,7 @@ export async function deleteDocument(id) {
 export async function fetchRiskScores(orgId) {
   const { data, error } = await supabase
     .from('risk_scores')
-    .select('*, covered_entities(name)')
+    .select('*, covered_entities(name, entity_type, opais_id)')
     .eq('org_id', orgId)
     .order('score_date', { ascending: false });
   if (error) throw error;
@@ -775,7 +775,7 @@ export async function deleteRiskScore(id) {
 export async function fetchForecasts(orgId) {
   const { data, error } = await supabase
     .from('forecasts')
-    .select('*, covered_entities(name)')
+    .select('*, covered_entities(name, entity_type, opais_id)')
     .eq('org_id', orgId)
     .order('period_start', { ascending: false });
   if (error) throw error;
@@ -880,7 +880,7 @@ export async function fetchAuditLog(orgId, { action, limit = 100 } = {}) {
 // ---------- data import and analysis engine ----------
 
 // Reads every row of a query, a page at a time (the API returns at most 1000 rows per request).
-async function fetchAllRows(makeQuery) {
+export async function fetchAllRows(makeQuery) {
   const size = 1000;
   const out = [];
   for (let from = 0; ; from += size) {
@@ -952,7 +952,7 @@ export async function fetchEngineRuns(orgId, limit = 10) {
 
 async function countRows(table, orgId, filters = {}) {
   let q = supabase.from(table).select('id', { count: 'exact', head: true }).eq('org_id', orgId);
-  for (const [k, v] of Object.entries(filters)) q = q.eq(k, v);
+  for (const [k, v] of Object.entries(filters)) q = Array.isArray(v) ? q.in(k, v) : q.eq(k, v);
   const { count, error } = await q;
   if (error) throw error;
   return count || 0;
@@ -977,4 +977,39 @@ export async function fetchEngineOverview(orgId) {
     data: { prescriptions, dispensing, purchases, claims, contracts },
     open: { critical, high, medium, low, opportunities: opps, exceptions },
   };
+}
+
+// Numbers for the dashboard tiles. Each filter here is the same one the tile passes to its list page,
+// so the number on the tile and the rows on the page always agree.
+export const ACTIVE_OPPORTUNITY_STATUSES = ['identified', 'evaluating', 'pursuing'];
+
+export const DASHBOARD_FILTERS = {
+  criticalHigh: { status: 'open', severity: ['critical', 'high'] },
+  openFindings: { status: 'open' },
+  openExceptions: { status: 'open' },
+  dispensingExceptions: { reconciliation_status: 'exception' },
+  unreconciled: { reconciliation_status: 'unreconciled' },
+  pendingReview: { eligibility_status: 'pending_review' },
+  noTbModifier: { part: 'B', tb_modifier_applied: false },
+  activeOpportunities: { status: ACTIVE_OPPORTUNITY_STATUSES },
+};
+
+export async function fetchDashboardKpis(orgId) {
+  const F = DASHBOARD_FILTERS;
+  const [criticalHigh, openFindings, openExceptions, dispensingExceptions, unreconciled, pendingReview, noTbModifier, activeOpps, oppRows, entities, facilities, users] = await Promise.all([
+    countRows('compliance_findings', orgId, F.criticalHigh),
+    countRows('compliance_findings', orgId, F.openFindings),
+    countRows('claims_exceptions', orgId, F.openExceptions),
+    countRows('dispensing_records', orgId, F.dispensingExceptions),
+    countRows('dispensing_records', orgId, F.unreconciled),
+    countRows('prescriptions', orgId, F.pendingReview),
+    countRows('medicare_claims', orgId, F.noTbModifier),
+    countRows('opportunities', orgId, F.activeOpportunities),
+    fetchAllRows(() => supabase.from('opportunities').select('id, estimated_annual_value').eq('org_id', orgId).in('status', ACTIVE_OPPORTUNITY_STATUSES).order('id')),
+    countRows('covered_entities', orgId),
+    countRows('facilities', orgId),
+    countRows('users', orgId),
+  ]);
+  const oppValue = oppRows.reduce((sum, r) => sum + Number(r.estimated_annual_value || 0), 0);
+  return { criticalHigh, openFindings, openExceptions, dispensingExceptions, unreconciled, pendingReview, noTbModifier, activeOpps, oppValue, entities, facilities, users };
 }

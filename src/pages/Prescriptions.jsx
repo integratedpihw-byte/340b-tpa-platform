@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import FilterBar from '../lib/FilterBar';
+import { applyFilter } from '../lib/filters';
 import { Plus, FileText, X, Trash2 } from 'lucide-react';
 import { fetchPrescriptions, fetchCoveredEntities, fetchFacilities, createPrescription, updatePrescription, deletePrescription } from '../lib/api';
 
@@ -12,7 +14,8 @@ function EligBadge({ status }) {
   return <span className={`badge ${cls}`}>{status.replace('_', ' ')}</span>;
 }
 
-export default function Prescriptions({ org }) {
+export default function Prescriptions({ org, initialFilter }) {
+  const [filter, setFilter] = useState(initialFilter || null);
   const [rows, setRows] = useState([]);
   const [entities, setEntities] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -89,6 +92,8 @@ export default function Prescriptions({ org }) {
     await load();
   }
 
+  const shown = applyFilter(rows, filter);
+
   return (
     <div>
       <div className="toolbar">
@@ -101,9 +106,11 @@ export default function Prescriptions({ org }) {
         </button>
       </div>
 
+      <FilterBar filter={filter} onClear={() => setFilter(null)} shown={shown.length} total={rows.length} />
+
       <div className="panel">
         <div className="panel-body" style={{ padding: 0 }}>
-          {!loading && rows.length === 0 ? (
+          {!loading && shown.length === 0 ? (
             <div className="empty-state">
               <FileText size={28} />
               <p>No prescriptions yet.</p>
@@ -122,7 +129,7 @@ export default function Prescriptions({ org }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {shown.map((row) => (
                   <tr key={row.id}>
                     <td style={{ fontWeight: 600 }}>{row.drug_name}</td>
                     <td>{row.ndc || '—'}</td>

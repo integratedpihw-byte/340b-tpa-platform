@@ -4,7 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch,
+  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch, FileDown,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -14,6 +14,7 @@ import MfaChallenge from './pages/MfaChallenge';
 import SecuritySettings from './pages/SecuritySettings';
 import DataImport from './pages/DataImport';
 import ReconciliationRisk from './pages/ReconciliationRisk';
+import Reports from './pages/Reports';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
 import PendingAccess from './pages/PendingAccess';
@@ -58,7 +59,23 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState('');
-  const [view, setView] = useState('dashboard');
+  const [view, setViewRaw] = useState('dashboard');
+  const [viewParams, setViewParams] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  // setView(view, filter?) - the optional filter opens a list already narrowed (dashboard drill-down)
+  const setView = useCallback((v, params = null) => { setViewRaw(v); setViewParams(params); }, []);
+
+  // A page that fails to load its data must say so instead of silently showing an empty list.
+  useEffect(() => {
+    const onRejection = (e) => {
+      const msg = e?.reason?.message || String(e?.reason || '');
+      if (!msg || /auth session missing|lock/i.test(msg)) return;
+      setLoadError(msg);
+    };
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => window.removeEventListener('unhandledrejection', onRejection);
+  }, []);
+  useEffect(() => { setLoadError(''); }, [view]);
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
   const [needsMfa, setNeedsMfa] = useState(false);
   const [aalReady, setAalReady] = useState(false);
@@ -218,6 +235,7 @@ export default function App() {
       items: [
         { key: 'import', label: 'Data Import', icon: Upload },
         { key: 'reconcile', label: 'Reconciliation & Risk', icon: ScanSearch },
+        { key: 'reports', label: 'Reports', icon: FileDown },
       ],
     },
     {
@@ -316,7 +334,13 @@ export default function App() {
         </div>
 
         <div className="content">
-          {view === 'dashboard' && <Dashboard org={org} />}
+          {loadError && (
+            <div className="alert alert-error" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span style={{ flex: 1 }}>Something could not be loaded: {loadError}</span>
+              <button className="btn btn-secondary btn-sm" onClick={() => setLoadError('')}>Dismiss</button>
+            </div>
+          )}
+          {view === 'dashboard' && <Dashboard org={org} onNavigate={setView} />}
           {view === 'organizations' && isPlatformAdmin && (
             <Organizations
               organizations={organizations}
@@ -326,25 +350,26 @@ export default function App() {
           )}
           {view === 'entities' && org && <CoveredEntities org={org} />}
           {view === 'facilities' && org && <Facilities org={org} />}
-          {view === 'prescriptions' && org && <Prescriptions org={org} />}
-          {view === 'dispensing' && org && <Dispensing org={org} />}
+          {view === 'prescriptions' && org && <Prescriptions org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
+          {view === 'dispensing' && org && <Dispensing org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
           {view === 'inventory' && org && <Inventory org={org} />}
           {view === 'purchasing' && org && <Purchasing org={org} />}
           {view === 'contracts' && org && <PharmacyContracts org={org} />}
           {view === 'medicaid' && org && <MedicaidEnrollments org={org} />}
-          {view === 'medicare' && org && <MedicareClaims org={org} />}
+          {view === 'medicare' && org && <MedicareClaims org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
           {view === 'reconciliations' && org && <PayerReconciliations org={org} />}
-          {view === 'exceptions' && org && <ClaimsExceptions org={org} />}
+          {view === 'exceptions' && org && <ClaimsExceptions org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
           {view === 'testing-sites' && org && <TestingSites org={org} />}
           {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
           {view === 'linkage' && org && <LinkageToCare org={org} />}
           {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
           {view === 'import' && org && <DataImport org={org} onNavigate={setView} />}
+          {view === 'reports' && org && <Reports org={org} />}
           {view === 'reconcile' && org && <ReconciliationRisk org={org} onNavigate={setView} />}
-          {view === 'compliance-findings' && org && <ComplianceFindings org={org} />}
+          {view === 'compliance-findings' && org && <ComplianceFindings org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
           {view === 'risk-assessments' && org && <RiskAssessments org={org} />}
           {view === 'savings-summaries' && org && <SavingsSummaries org={org} />}
-          {view === 'opportunities' && org && <Opportunities org={org} />}
+          {view === 'opportunities' && org && <Opportunities org={org} initialFilter={viewParams} key={JSON.stringify(viewParams)} />}
           {view === 'documents' && org && <Documents org={org} />}
           {view === 'risk-scores' && org && <RiskScores org={org} />}
           {view === 'forecasts' && org && <Forecasts org={org} />}

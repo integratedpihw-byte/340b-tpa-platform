@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import FilterBar from '../lib/FilterBar';
+import { applyFilter } from '../lib/filters';
+import { entityLabel } from '../lib/labels';
 import { Plus, ShieldAlert, X, Trash2 } from 'lucide-react';
 import AutoBadge, { ENGINE_DELETE_WARNING } from '../lib/AutoBadge';
 import { fetchComplianceFindings, fetchCoveredEntities, fetchFacilities, createComplianceFinding, updateComplianceFinding, deleteComplianceFinding } from '../lib/api';
@@ -20,7 +23,8 @@ function StatusBadge({ status }) {
   return <span className={`badge ${cls}`}>{status.replace(/_/g, ' ')}</span>;
 }
 
-export default function ComplianceFindings({ org }) {
+export default function ComplianceFindings({ org, initialFilter }) {
+  const [filter, setFilter] = useState(initialFilter || null);
   const [rows, setRows] = useState([]);
   const [entities, setEntities] = useState([]);
   const [facilities, setFacilities] = useState([]);
@@ -97,6 +101,8 @@ export default function ComplianceFindings({ org }) {
     await load();
   }
 
+  const shown = applyFilter(rows, filter);
+
   return (
     <div>
       <div className="toolbar">
@@ -109,9 +115,11 @@ export default function ComplianceFindings({ org }) {
         </button>
       </div>
 
+      <FilterBar filter={filter} onClear={() => setFilter(null)} shown={shown.length} total={rows.length} />
+
       <div className="panel">
         <div className="panel-body" style={{ padding: 0 }}>
-          {!loading && rows.length === 0 ? (
+          {!loading && shown.length === 0 ? (
             <div className="empty-state">
               <ShieldAlert size={28} />
               <p>No compliance findings logged.</p>
@@ -129,13 +137,13 @@ export default function ComplianceFindings({ org }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {shown.map((row) => (
                   <tr key={row.id}>
                     <td>
                       <span style={{ fontWeight: 600 }}>{row.finding_type.replace(/_/g, ' ')}</span><AutoBadge row={row} />
                       {row.description && <div className="toolbar-sub" style={{ marginTop: 2, maxWidth: 520 }}>{row.description}</div>}
                     </td>
-                    <td>{row.covered_entities?.name || '—'}</td>
+                    <td>{entityLabel(row.covered_entities)}</td>
                     <td><SeverityBadge severity={row.severity} /></td>
                     <td><StatusBadge status={row.status} /></td>
                     <td>{row.discovered_date}</td>
@@ -165,7 +173,7 @@ export default function ComplianceFindings({ org }) {
                   <label>Covered entity</label>
                   <select value={form.covered_entity_id} onChange={(e) => setForm({ ...form, covered_entity_id: e.target.value })}>
                     <option value="">Select one…</option>
-                    {entities.map((en) => <option key={en.id} value={en.id}>{en.name}</option>)}
+                    {entities.map((en) => <option key={en.id} value={en.id}>{entityLabel(en)}</option>)}
                   </select>
                 </div>
                 <div className="field">

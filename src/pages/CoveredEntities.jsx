@@ -17,6 +17,7 @@ function StatusBadge({ status }) {
 }
 
 const emptyForm = {
+  name: '',
   entity_type: 'fqhc',
   opais_id: '',
   registration_number: '',
@@ -55,6 +56,7 @@ export default function CoveredEntities({ org }) {
   function openEdit(row) {
     setEditing(row);
     setForm({
+      name: row.name || '',
       entity_type: row.entity_type,
       opais_id: row.opais_id || '',
       registration_number: row.registration_number || '',
@@ -73,6 +75,7 @@ export default function CoveredEntities({ org }) {
     try {
       const payload = {
         ...form,
+        name: form.name.trim() || null,
         opais_id: form.opais_id || null,
         registration_number: form.registration_number || null,
         recertification_date: form.recertification_date || null,
@@ -121,6 +124,7 @@ export default function CoveredEntities({ org }) {
             <table>
               <thead>
                 <tr>
+                  <th>Name</th>
                   <th>Type</th>
                   <th>OPAIS ID</th>
                   <th>Medicaid billing</th>
@@ -132,7 +136,8 @@ export default function CoveredEntities({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{ENTITY_TYPES.find((t) => t[0] === row.entity_type)?.[1] || row.entity_type}</td>
+                    <td style={{ fontWeight: 600 }}>{row.name || <span className="toolbar-sub">not named</span>}</td>
+                    <td>{ENTITY_TYPES.find((t) => t[0] === row.entity_type)?.[1] || row.entity_type}</td>
                     <td>{row.opais_id || '—'}</td>
                     <td>{row.medicaid_billing_method ? row.medicaid_billing_method.replace('_', '-') : '—'}</td>
                     <td>{row.recertification_date || '—'}</td>
@@ -159,6 +164,10 @@ export default function CoveredEntities({ org }) {
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 {error && <div className="alert alert-error">{error}</div>}
+                <div className="field">
+                  <label>Name</label>
+                  <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Riverside Community Health Center" />
+                </div>
                 <div className="field">
                   <label>Entity type</label>
                   <select value={form.entity_type} onChange={(e) => setForm({ ...form, entity_type: e.target.value })}>

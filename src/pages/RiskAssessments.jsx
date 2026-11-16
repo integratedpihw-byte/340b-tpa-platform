@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { entityLabel } from '../lib/labels';
 import { Plus, Gauge, X, Trash2 } from 'lucide-react';
 import { fetchRiskAssessments, fetchCoveredEntities, fetchOrgUsers, createRiskAssessment, updateRiskAssessment, deleteRiskAssessment } from '../lib/api';
 
@@ -124,7 +125,7 @@ export default function RiskAssessments({ org }) {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td style={{ fontWeight: 600 }}>{row.covered_entities?.name || '—'}</td>
+                    <td style={{ fontWeight: 600 }}>{entityLabel(row.covered_entities)}</td>
                     <td>{row.risk_area.replace(/_/g, ' ')}</td>
                     <td><RiskBadge level={row.risk_level} /></td>
                     <td>{row.assessment_date}</td>
@@ -155,7 +156,7 @@ export default function RiskAssessments({ org }) {
                   <label>Covered entity</label>
                   <select value={form.covered_entity_id} onChange={(e) => setForm({ ...form, covered_entity_id: e.target.value })}>
                     <option value="">Select one…</option>
-                    {entities.map((en) => <option key={en.id} value={en.id}>{en.name}</option>)}
+                    {entities.map((en) => <option key={en.id} value={en.id}>{entityLabel(en)}</option>)}
                   </select>
                 </div>
                 <div className="inline-form">
