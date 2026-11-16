@@ -4,10 +4,14 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp, Plug, History,
+  Radar, TrendingUp, Plug, History, Lock,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
+import { useIdleLogout } from './lib/useIdleLogout';
+import { IDLE_MINUTES, IDLE_WARN_SECONDS } from './lib/securityConfig';
+import MfaChallenge from './pages/MfaChallenge';
+import SecuritySettings from './pages/SecuritySettings';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
 import PendingAccess from './pages/PendingAccess';
@@ -54,6 +58,27 @@ export default function App() {
   const [selectedOrgId, setSelectedOrgId] = useState('');
   const [view, setView] = useState('dashboard');
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [aalReady, setAalReady] = useState(false);
+
+  // Signed in with a password but the account has two-step verification on: block until the code is entered.
+  const refreshAal = useCallback(async () => {
+    try {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      setNeedsMfa(!!data && data.nextLevel === 'aal2' && data.currentLevel !== 'aal2');
+    } catch {
+      setNeedsMfa(false);
+    } finally {
+      setAalReady(true);
+    }
+  }, []);
+
+  const idle = useIdleLogout({
+    enabled: !!user && !needsMfa,
+    idleMs: IDLE_MINUTES * 60 * 1000,
+    warnMs: IDLE_WARN_SECONDS * 1000,
+    onTimeout: () => { signOut().catch(() => {}); },
+  });
 
   const loadWorkspace = useCallback(async (currentUser) => {
     setLoadingWorkspace(true);
@@ -82,15 +107,22 @@ export default function App() {
       if (!active) return;
       const sessionUser = data.session?.user || null;
       setUser(sessionUser);
-      setBooting(false);
-      if (sessionUser) loadWorkspace(sessionUser);
+      if (sessionUser) {
+        refreshAal().then(() => { if (active) setBooting(false); });
+        loadWorkspace(sessionUser);
+      } else {
+        setBooting(false);
+      }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionUser = session?.user || null;
       setUser(sessionUser);
       if (sessionUser) {
+        setTimeout(() => { refreshAal(); }, 0);
         loadWorkspace(sessionUser);
       } else {
+        setNeedsMfa(false);
+        setAalReady(false);
         setProfile(null);
         setOrganizations([]);
         setSelectedOrgId('');
@@ -98,7 +130,7 @@ export default function App() {
       }
     });
     return () => { active = false; sub.subscription.unsubscribe(); };
-  }, [loadWorkspace]);
+  }, [loadWorkspace, refreshAal]);
 
   if (booting) {
     return <div className="center-screen">Loading…</div>;
@@ -106,6 +138,14 @@ export default function App() {
 
   if (!user) {
     return <AuthScreen />;
+  }
+
+  if (!aalReady) {
+    return <div className="center-screen">Loading…</div>;
+  }
+
+  if (needsMfa) {
+    return <MfaChallenge onVerified={refreshAal} />;
   }
 
   if (loadingWorkspace && organizations.length === 0) {
@@ -202,6 +242,12 @@ export default function App() {
         { key: 'audit', label: 'Audit Log', icon: ScrollText },
       ],
     },
+    {
+      label: 'My Account',
+      items: [
+        { key: 'security', label: 'Security', icon: Lock },
+      ],
+    },
   ];
   const navItems = navGroups.flatMap((g) => g.items);
 
@@ -295,8 +341,23 @@ export default function App() {
           {view === 'sync-logs' && org && <SyncLogs org={org} />}
           {view === 'users' && org && <UsersPage org={org} />}
           {view === 'audit' && org && <AuditLog org={org} />}
+          {view === 'security' && <SecuritySettings />}
         </div>
       </div>
+
+      {idle.warning && (
+        <div className="modal-backdrop">
+          <div className="modal" style={{ maxWidth: 420 }} role="alertdialog" aria-labelledby="idle-title">
+            <div className="modal-header"><h3 id="idle-title">Still there?</h3></div>
+            <div style={{ padding: '18px 22px' }}>
+              <p style={{ marginTop: 0 }}>
+                For security you will be signed out in <strong>{idle.secondsLeft}</strong> seconds because there has been no activity.
+              </p>
+              <button className="btn btn-primary" onClick={idle.stay}>Stay signed in</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
