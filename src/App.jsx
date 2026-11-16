@@ -4,7 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch, FileDown,
+  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch, FileDown, Activity,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -15,6 +15,7 @@ import SecuritySettings from './pages/SecuritySettings';
 import DataImport from './pages/DataImport';
 import ReconciliationRisk from './pages/ReconciliationRisk';
 import Reports from './pages/Reports';
+import HivPerformance from './pages/HivPerformance';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
 import PendingAccess from './pages/PendingAccess';
@@ -228,6 +229,7 @@ export default function App() {
         { key: 'testing-encounters', label: 'Testing Encounters', icon: ClipboardList },
         { key: 'linkage', label: 'Linkage to Care', icon: HeartPulse },
         { key: 'counselor-assignments', label: 'Counselor Assignments', icon: UserCog },
+        { key: 'hiv-performance', label: 'Performance', icon: Activity },
       ],
     },
     {
@@ -363,6 +365,7 @@ export default function App() {
           {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
           {view === 'linkage' && org && <LinkageToCare org={org} />}
           {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
+          {view === 'hiv-performance' && org && <HivPerformance org={org} />}
           {view === 'import' && org && <DataImport org={org} onNavigate={setView} />}
           {view === 'reports' && org && <Reports org={org} />}
           {view === 'reconcile' && org && <ReconciliationRisk org={org} onNavigate={setView} />}

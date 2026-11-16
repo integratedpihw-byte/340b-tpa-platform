@@ -1013,3 +1013,18 @@ export async function fetchDashboardKpis(orgId) {
   const oppValue = oppRows.reduce((sum, r) => sum + Number(r.estimated_annual_value || 0), 0);
   return { criticalHigh, openFindings, openExceptions, dispensingExceptions, unreconciled, pendingReview, noTbModifier, activeOpps, oppValue, entities, facilities, users };
 }
+
+// ---------- HIV program performance ----------
+
+export async function fetchHivPerformance(orgId, from, to, group) {
+  const { data, error } = await supabase.rpc('hiv_performance', { p_org: orgId, p_from: from, p_to: to, p_group: group });
+  if (error) throw error;
+  return data || [];
+}
+
+// True when the signed-in user may see every counselor's figures, not only their own.
+export async function fetchCanSeeAllHivPerformance() {
+  const { data, error } = await supabase.rpc('auth_has_permission', { perm: 'hiv_performance.read' });
+  if (error) return null;
+  return data === true;
+}
