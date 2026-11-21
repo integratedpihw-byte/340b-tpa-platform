@@ -4,7 +4,7 @@ import { fetchPharmacyContracts, fetchCoveredEntities, fetchFacilities, createPh
 
 const emptyForm = {
   covered_entity_id: '', pharmacy_facility_id: '', contract_start_date: '', contract_end_date: '',
-  last_internal_audit_date: '', last_independent_audit_date: '', status: 'pending',
+  last_internal_audit_date: '', last_independent_audit_date: '', status: 'pending', medicaid_arrangement: false,
 };
 
 function StatusBadge({ status }) {
@@ -61,6 +61,7 @@ export default function PharmacyContracts({ org }) {
       last_internal_audit_date: row.last_internal_audit_date || '',
       last_independent_audit_date: row.last_independent_audit_date || '',
       status: row.status,
+      medicaid_arrangement: !!row.medicaid_arrangement,
     });
     setError('');
     setShowForm(true);
@@ -218,6 +219,13 @@ export default function PharmacyContracts({ org }) {
                     <option value="active">Active</option>
                     <option value="terminated">Terminated</option>
                   </select>
+                </div>
+                <div className="field">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={form.medicaid_arrangement} onChange={(e) => setForm({ ...form, medicaid_arrangement: e.target.checked })} style={{ width: 'auto' }} />
+                    Medicaid arrangement with the state, reported to HRSA
+                  </label>
+                  <div className="field-hint">HRSA expects contract pharmacies to carve out Medicaid fee-for-service unless such an arrangement exists. Leave unchecked if you are not sure.</div>
                 </div>
               </div>
               <div className="modal-footer">

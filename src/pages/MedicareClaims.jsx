@@ -6,7 +6,7 @@ import { fetchMedicareClaims, fetchCoveredEntities, fetchFacilities, createMedic
 
 const emptyForm = {
   covered_entity_id: '', facility_id: '', claim_number: '', part: 'B', ndc: '', drug_name: '',
-  tb_modifier_applied: false, billed_amount: '', allowed_amount: '', claim_date: '', status: 'submitted',
+  tb_modifier_applied: false, jg_modifier_applied: false, separately_payable: true, identifier_340b_applied: false, billed_amount: '', allowed_amount: '', claim_date: '', status: 'submitted',
 };
 
 function StatusBadge({ status }) {
@@ -57,6 +57,9 @@ export default function MedicareClaims({ org, initialFilter }) {
       ndc: row.ndc || '',
       drug_name: row.drug_name || '',
       tb_modifier_applied: row.tb_modifier_applied,
+      jg_modifier_applied: !!row.jg_modifier_applied,
+      separately_payable: row.separately_payable !== false,
+      identifier_340b_applied: !!row.identifier_340b_applied,
       billed_amount: row.billed_amount ?? '',
       allowed_amount: row.allowed_amount ?? '',
       claim_date: row.claim_date || '',
@@ -139,7 +142,7 @@ export default function MedicareClaims({ org, initialFilter }) {
               </thead>
               <tbody>
                 {shown.map((row) => {
-                  const flagMissing = row.part === 'B' && !row.tb_modifier_applied;
+                  const flagMissing = row.part === 'B' && !row.tb_modifier_applied && !row.jg_modifier_applied && row.separately_payable !== false;
                   return (
                     <tr key={row.id}>
                       <td style={{ fontWeight: 600 }}>{row.claim_number || row.id.slice(0, 8)}</td>
@@ -217,6 +220,24 @@ export default function MedicareClaims({ org, initialFilter }) {
                       <input type="checkbox" checked={form.tb_modifier_applied} onChange={(e) => setForm({ ...form, tb_modifier_applied: e.target.checked })} style={{ width: 'auto' }} />
                       TB modifier applied
                     </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                      <input type="checkbox" checked={form.jg_modifier_applied} onChange={(e) => setForm({ ...form, jg_modifier_applied: e.target.checked })} style={{ width: 'auto' }} />
+                      JG modifier applied
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                      <input type="checkbox" checked={form.separately_payable} onChange={(e) => setForm({ ...form, separately_payable: e.target.checked })} style={{ width: 'auto' }} />
+                      Separately payable drug
+                    </label>
+                    <div className="field-hint">The 340B modifier applies only to separately payable Part B drugs. Uncheck for packaged drugs so they are not flagged.</div>
+                  </div>
+                )}
+                {form.part === 'D' && (
+                  <div className="field">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input type="checkbox" checked={form.identifier_340b_applied} onChange={(e) => setForm({ ...form, identifier_340b_applied: e.target.checked })} style={{ width: 'auto' }} />
+                      340B identifier on the claim
+                    </label>
+                    <div className="field-hint">Submission Clarification Code 20 or Submission Type Code AA.</div>
                   </div>
                 )}
                 <div className="inline-form">

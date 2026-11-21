@@ -113,6 +113,21 @@ export const parsers = {
     throw new Error(`"${clean(v)}" is not yes/no`);
   },
 
+  // plain yes/no (unlike bool, "JG" means yes here, for columns that record whether a JG modifier was used)
+  yesno: (v) => {
+    const s = clean(v).toLowerCase();
+    if (['true', 'yes', 'y', '1', 'x', 'jg'].includes(s)) return true;
+    if (['false', 'no', 'n', '0', 'none'].includes(s)) return false;
+    throw new Error(`"${clean(v)}" is not yes/no`);
+  },
+
+  // two-letter US state or territory code, upper-cased
+  state: (v) => {
+    const s = clean(v).toUpperCase();
+    if (!/^[A-Z]{2}$/.test(s)) throw new Error(`"${clean(v)}" is not a two-letter state code (for example OH)`);
+    return s;
+  },
+
   // calendar date -> YYYY-MM-DD
   date: (v) => toIsoDate(clean(v)),
 
@@ -161,7 +176,7 @@ export const DATASETS = {
     conflict: 'org_id,rx_number',
     needsEntity: true,
     keyOf: (r) => r.rx_number,
-    help: 'One row per prescription. Re-importing the same Rx number updates it instead of adding a duplicate.',
+    help: 'One row per prescription. Re-importing the same Rx number updates it instead of adding a duplicate. Optional payer_type (medicaid_ffs, medicaid_mco, medicare_b, medicare_d, commercial, uninsured, other) and medicaid_state feed the Medicaid checks.',
     columns: [
       { key: 'rx_number', required: true, parse: parsers.text, aliases: ['rx', 'rx_no', 'rx_id', 'prescription_number', 'prescription_id'], example: 'RX-100234' },
       { key: 'drug_name', required: true, parse: parsers.text, aliases: ['drug', 'medication'], example: 'Biktarvy 50/200/25 mg' },
@@ -171,6 +186,8 @@ export const DATASETS = {
       { key: 'prescriber_npi', parse: parsers.npi, aliases: ['npi', 'prescriber'], example: '1234567893' },
       { key: 'eligibility_status', parse: enumOf(['eligible', 'ineligible', 'pending_review'], 'eligibility status'), def: 'pending_review', aliases: ['eligibility'], example: 'eligible' },
       { key: 'status', parse: enumOf(['prescribed', 'dispensed', 'reversed', 'void'], 'prescription status'), def: 'prescribed', example: 'dispensed' },
+      { key: 'payer_type', parse: enumOf(['medicaid_ffs', 'medicaid_mco', 'medicare_b', 'medicare_d', 'commercial', 'uninsured', 'other'], 'payer'), aliases: ['payer'], example: 'medicaid_ffs' },
+      { key: 'medicaid_state', parse: parsers.state, aliases: ['state', 'billing_state'], example: 'OH' },
       { key: 'prescribed_at', parse: parsers.datetime, aliases: ['prescribed_date', 'written_date', 'date'], example: '2026-09-14' },
       { key: 'facility', lookup: 'facility', target: 'facility_id', parse: parsers.text, aliases: ['facility_name', 'clinic'], example: 'Main Street Clinic' },
     ],
@@ -190,6 +207,7 @@ export const DATASETS = {
       { key: 'quantity_dispensed', parse: parsers.number, aliases: ['quantity', 'qty', 'qty_dispensed'], example: '30' },
       { key: 'lot_number', parse: parsers.text, aliases: ['lot'], example: 'L2309A' },
       { key: 'pricing_tier', parse: enumOf(['340b', 'wac', 'gpo', 'other'], 'pricing tier'), aliases: ['price_tier', 'account', 'inventory_type'], example: '340b' },
+      { key: 'claim_340b_identified', parse: parsers.bool, def: false, aliases: ['340b_identified', 'claim_340b', 'scc_20'], example: 'no' },
       { key: 'dispensed_at', parse: parsers.datetime, aliases: ['dispensed_date', 'fill_date', 'date'], example: '2026-09-15' },
       { key: 'facility', lookup: 'facility', target: 'facility_id', parse: parsers.text, aliases: ['pharmacy', 'facility_name', 'pharmacy_name'], example: 'Corner Drug Contract Pharmacy' },
     ],
@@ -220,13 +238,16 @@ export const DATASETS = {
     conflict: 'org_id,claim_number',
     needsEntity: true,
     keyOf: (r) => r.claim_number,
-    help: 'One row per claim line. The Rx number links a claim to its prescription (recommended, needed for the 340B modifier check). Mark tb_modifier_applied yes or no; "TB" counts as yes, "JG" as no.',
+    help: 'One row per claim line. The Rx number links a claim to its prescription (recommended, needed for the 340B modifier check). Mark tb_modifier_applied yes or no ("TB" counts as yes). Use jg_modifier_applied for the older JG modifier, separately_payable = no for packaged drugs, and identifier_340b_applied for Part D claims that carried a 340B code.',
     columns: [
       { key: 'claim_number', required: true, parse: parsers.text, aliases: ['claim', 'claim_no', 'claim_id', 'icn'], example: 'CLM-7730012' },
       { key: 'part', required: true, parse: (v) => { const s = clean(v).toUpperCase().replace(/^PART\s*/, ''); if (s === 'B' || s === 'D') return s; throw new Error(`"${clean(v)}" is not Medicare part B or D`); }, aliases: ['medicare_part'], example: 'B' },
       { key: 'claim_date', required: true, parse: parsers.date, aliases: ['date_of_service', 'dos', 'service_date', 'date'], example: '2026-09-15' },
       { key: 'rx_number', lookup: 'prescription', target: 'prescription_id', parse: parsers.text, aliases: ['rx', 'rx_no', 'prescription_number'], example: 'RX-100234' },
       { key: 'tb_modifier_applied', parse: parsers.bool, def: false, aliases: ['tb_modifier', 'modifier', '340b_modifier'], example: 'yes' },
+      { key: 'jg_modifier_applied', parse: parsers.yesno, def: false, aliases: ['jg_modifier', 'jg'], example: 'no' },
+      { key: 'separately_payable', parse: parsers.yesno, def: true, aliases: ['separately_payable_drug'], example: 'yes' },
+      { key: 'identifier_340b_applied', parse: parsers.yesno, def: false, aliases: ['340b_identifier', 'scc_20'], example: 'no' },
       { key: 'ndc', parse: parsers.ndc, example: '61958-2501-1' },
       { key: 'drug_name', parse: parsers.text, aliases: ['drug', 'description'], example: 'Biktarvy 50/200/25 mg' },
       { key: 'billed_amount', parse: parsers.number, aliases: ['billed', 'charge'], example: '1840.00' },

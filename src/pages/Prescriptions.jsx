@@ -6,7 +6,7 @@ import { fetchPrescriptions, fetchCoveredEntities, fetchFacilities, createPrescr
 
 const emptyForm = {
   covered_entity_id: '', facility_id: '', patient_ref: '', ndc: '', drug_name: '',
-  prescriber_npi: '', quantity: '', eligibility_status: 'pending_review', status: 'prescribed',
+  prescriber_npi: '', quantity: '', eligibility_status: 'pending_review', status: 'prescribed', payer_type: '', medicaid_state: '',
 };
 
 function EligBadge({ status }) {
@@ -59,6 +59,8 @@ export default function Prescriptions({ org, initialFilter }) {
       quantity: row.quantity ?? '',
       eligibility_status: row.eligibility_status,
       status: row.status,
+      payer_type: row.payer_type || '',
+      medicaid_state: row.medicaid_state || '',
     });
     setError('');
     setShowForm(true);
@@ -69,11 +71,15 @@ export default function Prescriptions({ org, initialFilter }) {
     if (!form.covered_entity_id) { setError('Select a covered entity first.'); return; }
     setBusy(true);
     setError('');
+    const state = form.medicaid_state.trim().toUpperCase();
+    if (state && !/^[A-Z]{2}$/.test(state)) { setError('Enter the Medicaid state as a two-letter code, for example OH.'); setBusy(false); return; }
     try {
       const payload = {
         ...form,
         facility_id: form.facility_id || null,
         quantity: form.quantity === '' ? null : Number(form.quantity),
+        payer_type: form.payer_type || null,
+        medicaid_state: state || null,
       };
       if (editing) await updatePrescription(editing.id, payload);
       else await createPrescription({ ...payload, org_id: org.id });
@@ -216,6 +222,26 @@ export default function Prescriptions({ org, initialFilter }) {
                     </select>
                   </div>
                 </div>
+                <div className="inline-form">
+                  <div className="field">
+                    <label>Payer</label>
+                    <select value={form.payer_type} onChange={(e) => setForm({ ...form, payer_type: e.target.value })}>
+                      <option value="">Not recorded</option>
+                      <option value="medicaid_ffs">Medicaid fee-for-service</option>
+                      <option value="medicaid_mco">Medicaid managed care</option>
+                      <option value="medicare_b">Medicare Part B</option>
+                      <option value="medicare_d">Medicare Part D</option>
+                      <option value="commercial">Commercial</option>
+                      <option value="uninsured">Uninsured</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Medicaid state</label>
+                    <input value={form.medicaid_state} maxLength={2} onChange={(e) => setForm({ ...form, medicaid_state: e.target.value.toUpperCase() })} placeholder="e.g. OH" />
+                  </div>
+                </div>
+                <div className="field-hint">Used to check Medicaid carve-in / carve-out and contract pharmacy rules. Leave blank if unknown.</div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>

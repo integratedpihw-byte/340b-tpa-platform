@@ -193,7 +193,7 @@ export default function ReconciliationRisk({ org, onNavigate }) {
               </table>
             </details>
           ))}
-          <p className="toolbar-sub" style={{ marginBottom: 0 }}>State Medicaid rules, the full duplicate-discount comparison against the HRSA Medicaid Exclusion File, and Medicare modifier edge cases (for example drugs that are not separately payable) are not automated yet. These checks are a starting screen, not a substitute for your compliance program or an independent audit.</p>
+          <p className="toolbar-sub" style={{ marginBottom: 0 }}>Not automated: any state-specific Medicaid rule beyond the notes you record on the State Rules page, drugs sold in more than one package size and the JW / JZ discard modifiers, comparison at the level of individual child-site 340B IDs, and Medicare billing-modifier instructions for 2027 onward (claims from 2027 get a review prompt only). These checks are a starting screen, not a substitute for your compliance program or an independent audit.</p>
         </div>
       </div>
     </div>

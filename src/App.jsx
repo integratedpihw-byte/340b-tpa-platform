@@ -4,7 +4,7 @@ import {
   FileText, PackageCheck, Boxes, ShoppingCart, Handshake, Landmark, Stethoscope, GitCompare, AlertOctagon,
   TestTube, ClipboardList, HeartPulse, UserCog,
   ShieldAlert, Gauge, PiggyBank, Lightbulb, FileStack,
-  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch, FileDown, Activity,
+  Radar, TrendingUp, Plug, History, Lock, Upload, ScanSearch, FileDown, Activity, FileCheck2, Map as MapIcon,
 } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { fetchIsPlatformAdmin, fetchMyProfile, fetchOrganizations, signOut } from './lib/api';
@@ -16,6 +16,8 @@ import DataImport from './pages/DataImport';
 import ReconciliationRisk from './pages/ReconciliationRisk';
 import Reports from './pages/Reports';
 import HivPerformance from './pages/HivPerformance';
+import MefCheck from './pages/MefCheck';
+import StateRules from './pages/StateRules';
 import AuthScreen from './pages/AuthScreen';
 import Onboarding from './pages/Onboarding';
 import PendingAccess from './pages/PendingAccess';
@@ -218,6 +220,8 @@ export default function App() {
       items: [
         { key: 'medicaid', label: 'Medicaid Enrollments', icon: Landmark },
         { key: 'medicare', label: 'Medicare Claims', icon: Stethoscope },
+        { key: 'mef-check', label: 'MEF Check', icon: FileCheck2 },
+        { key: 'state-rules', label: 'State Rules', icon: MapIcon },
         { key: 'reconciliations', label: 'Payer Reconciliations', icon: GitCompare },
         { key: 'exceptions', label: 'Claims Exceptions', icon: AlertOctagon },
       ],
@@ -365,6 +369,8 @@ export default function App() {
           {view === 'testing-encounters' && org && <TestingEncounters org={org} />}
           {view === 'linkage' && org && <LinkageToCare org={org} />}
           {view === 'counselor-assignments' && org && <CounselorAssignments org={org} />}
+          {view === 'mef-check' && org && <MefCheck org={org} />}
+          {view === 'state-rules' && org && <StateRules org={org} />}
           {view === 'hiv-performance' && org && <HivPerformance org={org} />}
           {view === 'import' && org && <DataImport org={org} onNavigate={setView} />}
           {view === 'reports' && org && <Reports org={org} />}

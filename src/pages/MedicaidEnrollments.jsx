@@ -88,7 +88,7 @@ export default function MedicaidEnrollments({ org }) {
       <div className="toolbar">
         <div>
           <h2>Medicaid Enrollments</h2>
-          <div className="toolbar-sub">The Medicaid Exclusion File (MEF) governs fee-for-service only — managed care uses separate controls.</div>
+          <div className="toolbar-sub">The Medicaid Exclusion File (MEF) governs fee-for-service only — managed care uses separate controls. Use MEF Check to compare your enrollments with the file.</div>
         </div>
         <button className="btn btn-primary" style={{ width: 'auto' }} onClick={openNew}>
           <Plus size={15} /> New enrollment

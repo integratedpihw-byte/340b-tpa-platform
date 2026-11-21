@@ -1028,3 +1028,67 @@ export async function fetchCanSeeAllHivPerformance() {
   if (error) return null;
   return data === true;
 }
+
+// ---------- Medicaid Exclusion File check and state rule notes ----------
+
+export async function fetchMefComparison(orgId) {
+  const { data, error } = await supabase
+    .from('mef_comparison')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('entity_label', { ascending: true })
+    .order('state', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function fetchMefFiles(orgId) {
+  const { data, error } = await supabase
+    .from('mef_files')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('quarter_start', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function replaceMefEntries(orgId, quarterStart, rows, sourceFile) {
+  const { data, error } = await supabase.rpc('replace_mef_entries', {
+    p_org: orgId, p_quarter: quarterStart, p_rows: rows, p_source: sourceFile || null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function applyMefComparison(orgId) {
+  const { data, error } = await supabase.rpc('apply_mef_comparison', { p_org: orgId });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchStateRules(orgId) {
+  const { data, error } = await supabase
+    .from('state_medicaid_rules')
+    .select('*')
+    .eq('org_id', orgId)
+    .order('state', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createStateRule(fields) {
+  const { data, error } = await supabase.from('state_medicaid_rules').insert(fields).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateStateRule(id, patch) {
+  const { data, error } = await supabase.from('state_medicaid_rules').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteStateRule(id) {
+  const { error } = await supabase.from('state_medicaid_rules').delete().eq('id', id);
+  if (error) throw error;
+}

@@ -6,7 +6,7 @@ import { fetchDispensingRecords, fetchPrescriptions, fetchFacilities, createDisp
 
 const emptyForm = {
   prescription_id: '', facility_id: '', ndc: '', quantity_dispensed: '', lot_number: '',
-  pricing_tier: '340b', reconciliation_status: 'unreconciled',
+  pricing_tier: '340b', reconciliation_status: 'unreconciled', claim_340b_identified: false,
 };
 
 function ReconBadge({ status }) {
@@ -57,6 +57,7 @@ export default function Dispensing({ org, initialFilter }) {
       lot_number: row.lot_number || '',
       pricing_tier: row.pricing_tier || '340b',
       reconciliation_status: row.reconciliation_status,
+      claim_340b_identified: !!row.claim_340b_identified,
     });
     setError('');
     setShowForm(true);
@@ -206,6 +207,13 @@ export default function Dispensing({ org, initialFilter }) {
                       <option value="exception">Exception</option>
                     </select>
                   </div>
+                </div>
+                <div className="field">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" checked={form.claim_340b_identified} onChange={(e) => setForm({ ...form, claim_340b_identified: e.target.checked })} style={{ width: 'auto' }} />
+                    Claim was marked as a 340B claim
+                  </label>
+                  <div className="field-hint">For example with the Submission Clarification Code 20. Checked only for Medicaid managed care states where you have recorded that an identifier is used.</div>
                 </div>
               </div>
               <div className="modal-footer">
